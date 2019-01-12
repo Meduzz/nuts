@@ -1,8 +1,16 @@
 name := "nuts"
 
-version := "0.1"
+version := "20190112"
 
 scalaVersion := "2.12.8"
+
+organization := "se.kodiak.tools"
+
+credentials += Credentials(Path.userHome / ".ivy2" / ".tools")
+
+publishTo := Some("se.kodiak.tools" at "https://yamr.kodiak.se/maven")
+
+publishArtifact in (Compile, packageDoc) := false
 
 libraryDependencies ++= Seq(
 	"io.nats" % "jnats" % "2.2.0",
