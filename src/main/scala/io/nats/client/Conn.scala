@@ -6,14 +6,14 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 
 class Conn(val conn:Connection) {
-	def request(subject:String, data:Array[Byte])(implicit ec:ExecutionContext, timeout:Duration):Future[Option[Message]] = {
+	def request(subject:String, data:Array[Byte])(implicit ec:ExecutionContext, timeout:Duration):Future[Message] = {
 		val javaTimeout = time.Duration.ofNanos(timeout.toNanos)
-		Future(Option(conn.request(subject, data, javaTimeout)))
+		Future(conn.request(subject, data, javaTimeout))
 	}
 
-	def request(subject:String, data:String, encoding:String = "utf-8")(implicit ec:ExecutionContext, timeout:Duration):Future[Option[Message]] = {
+	def request(subject:String, data:String, encoding:String = "utf-8")(implicit ec:ExecutionContext, timeout:Duration):Future[Message] = {
 		val javaTimeout = time.Duration.ofNanos(timeout.toNanos)
-		Future(Option(conn.request(subject, data.getBytes(encoding), javaTimeout)))
+		Future(conn.request(subject, data.getBytes(encoding), javaTimeout))
 	}
 
 	def subscribe(subject:String, handler:Message => Unit):Dispatcher = {
@@ -21,7 +21,7 @@ class Conn(val conn:Connection) {
 		dispatcher.subscribe(subject)
 	}
 
-	def subscribe(subject:String, queue:String, handler:Message => Unit)(implicit ec:ExecutionContext, timeout:Duration):Dispatcher = {
+	def subscribe(subject:String, queue:String, handler:Message => Unit):Dispatcher = {
 		val dispatcher = conn.createDispatcher((msg:Message) => handler(msg))
 		dispatcher.subscribe(subject, queue)
 	}

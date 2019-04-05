@@ -6,7 +6,9 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Milliseconds, Seconds, Span}
 import org.scalatest.{FunSpec, Matchers}
 
-import scala.concurrent.{ExecutionContext, duration}
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, TimeoutException, duration}
+import scala.util.{Failure, Success}
 
 
 class ConnTest extends FunSpec with Matchers with ScalaFutures {
@@ -54,25 +56,27 @@ class ConnTest extends FunSpec with Matchers with ScalaFutures {
 
 				val reply = nuts.request("test3", "Hello world!".getBytes("utf-8"))
 
-				whenReady(reply) {
-					case Some(rply) => {
-						val text = new String(rply.getData, "utf-8")
-						text shouldBe "Hello world!".reverse
-					}
-					case None => fail("Expected a reply")
+				whenReady(reply) { rply =>
+					val text = new String(rply.getData, "utf-8")
+					text shouldBe "Hello world!".reverse
 				}
 			}
 		}
 
 		describe("futures and failures") {
-			it("when a request times out we get a none") {
+			it("when a request times out we get a time out exception thingie") {
 				import Implicits._
 				val nuts = conn.toScala
 
 				val reply = nuts.request("test-1", "Hello world!".getBytes("utf-8"))
 
-				whenReady(reply) { rply =>
-					rply shouldBe None
+				intercept[TimeoutException] {
+					Await.ready(reply, Duration(100, TimeUnit.MILLISECONDS))
+
+					reply.onComplete {
+						case f:Failure[Message] => f.exception.getMessage.contains("Futures timed out after [100 milliseconds]") shouldBe true
+						case Success(msg) => fail("Did not expect a reply.")
+					}
 				}
 			}
 		}

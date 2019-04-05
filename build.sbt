@@ -1,6 +1,6 @@
 name := "nuts"
 
-version := "20190112"
+version := "20190405"
 
 scalaVersion := "2.12.8"
 
